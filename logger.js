@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
+// Creamos la carpeta logs si no existe
 const logDir = path.join(__dirname, 'logs');
 if (!fs.existsSync(logDir)) {
   fs.mkdirSync(logDir, { recursive: true });
@@ -8,18 +9,12 @@ if (!fs.existsSync(logDir)) {
 
 const logFile = path.join(logDir, 'access.log');
 
-/**
- * Registra una solicitud HTTP en la consola y de forma persistente en logs/access.log
- * Formato estándar: [Fecha/Hora] IP - "Método URL HTTP/versión" Código Bytes "User-Agent"
- * @param {import('http').IncomingMessage} req
- * @param {number} statusCode
- * @param {number} [bytesSent=0]
- */
+// Guarda cada peticion en access.log y la muestra por consola
 function logAccess(req, statusCode, bytesSent = 0) {
   const timestamp = new Date().toISOString();
   let ip = req.socket.remoteAddress || req.connection?.remoteAddress || '127.0.0.1';
 
-  // Normalizar IPv6 loopback (::1 o ::ffff:127.0.0.1) a 127.0.0.1 para mayor claridad
+  // Si viene en formato ipv6 lo pasamos a 127.0.0.1
   if (ip === '::1' || ip === '::ffff:127.0.0.1') {
     ip = '127.0.0.1';
   }
@@ -31,7 +26,7 @@ function logAccess(req, statusCode, bytesSent = 0) {
 
   const logLine = `[${timestamp}] ${ip} - "${method} ${url} HTTP/${httpVersion}" ${statusCode} ${bytesSent} "${userAgent}"\n`;
 
-  // Color de consola según status code
+  // Color de consola segun status code
   let statusColor = '\x1b[32m'; // verde 2xx
   if (statusCode >= 300 && statusCode < 400) statusColor = '\x1b[36m'; // cyan 3xx
   if (statusCode >= 400 && statusCode < 500) statusColor = '\x1b[33m'; // amarillo 4xx
@@ -40,19 +35,15 @@ function logAccess(req, statusCode, bytesSent = 0) {
 
   console.log(`[${timestamp}] ${ip} - "\x1b[35m${method}\x1b[0m ${url}" ${statusColor}${statusCode}${resetColor} ${bytesSent}B`);
 
-  // Persistir en logs/access.log
+  // Guardamos en access.log
   fs.appendFile(logFile, logLine, 'utf8', (err) => {
     if (err) {
-      console.error('[LOGGER ERROR] Fallo al escribir en access.log:', err);
+      console.error('Error al escribir en access.log:', err);
     }
   });
 }
 
-/**
- * Obtiene las últimas N líneas del archivo access.log
- * @param {number} [lines=50]
- * @returns {string}
- */
+// Lee las ultimas lineas del archivo para mostrarlas en el admin
 function getRecentLogs(lines = 50) {
   if (!fs.existsSync(logFile)) {
     return 'Sin registros aún.';
@@ -67,9 +58,7 @@ function getRecentLogs(lines = 50) {
   }
 }
 
-/**
- * Limpia el archivo de logs
- */
+// Vacia el archivo de logs
 function clearLogs() {
   try {
     fs.writeFileSync(logFile, '', 'utf8');

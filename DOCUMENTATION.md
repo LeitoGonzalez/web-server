@@ -222,12 +222,3 @@ PASS: POST /api/config returns 200
 PASS: GET /api/logs returns 200
 PASS: access.log contains entries
 ```
-
----
-
-## 6. Conclusiones
-
-La solución desarrollada satisface con creces los requerimientos del Trabajo Práctico N° 7:
-1. Proporciona una implementación transparente y pedagógica de las normas RFC de HTTP.
-2. Neutraliza de forma exhaustiva vectores de ataque comunes en servidores web.
-3. Ofrece una experiencia de usuario moderna y profesional tanto en el portal de bienvenida como en el panel de administración.

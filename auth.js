@@ -1,15 +1,8 @@
-/**
- * Middleware para Autenticación Básica HTTP (RFC 7617)
- * @param {import('http').IncomingMessage} req - Objeto de petición HTTP
- * @param {import('http').ServerResponse} res - Objeto de respuesta HTTP
- * @param {string} user - Usuario esperado configurado
- * @param {string} pass - Contraseña esperada configurada
- * @param {string} [realm='Zona Protegida UTN'] - Dominio de seguridad para el cliente
- * @returns {boolean} Retorna true si las credenciales son válidas, false si no lo son.
- */
+// Middleware de autenticacion basica
 function basicAuth(req, res, user, pass, realm = 'Zona Protegida UTN FRM') {
   const authHeader = req.headers['authorization'];
 
+  // Si no mandaron la cabecera de autorizacion, devolvemos 401
   if (!authHeader || !authHeader.startsWith('Basic ')) {
     res.setHeader('WWW-Authenticate', `Basic realm="${realm}", charset="UTF-8"`);
     res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' });
@@ -30,7 +23,7 @@ function basicAuth(req, res, user, pass, realm = 'Zona Protegida UTN FRM') {
 <body>
   <div class="card">
     <h1>401 No Autorizado</h1>
-    <p>Se requiere autenticación básica (usuario y contraseña) para acceder a este recurso.</p>
+    <p>Se requiere usuario y contraseña para entrar acá.</p>
     <a href="/" class="btn">Volver al Inicio</a>
   </div>
 </body>
@@ -38,7 +31,7 @@ function basicAuth(req, res, user, pass, realm = 'Zona Protegida UTN FRM') {
     return false;
   }
 
-  // El header viene con formato: "Basic dXN1YXJpbzpjb250cmFzZcOxYQ=="
+  // Viene en base64: "Basic dXN1YXJpbzpjb250cmFzZcOxYQ=="
   const base64Credentials = authHeader.split(' ')[1] || '';
   let decoded = '';
   try {
@@ -47,22 +40,24 @@ function basicAuth(req, res, user, pass, realm = 'Zona Protegida UTN FRM') {
     decoded = '';
   }
 
+  // Separamos usuario y clave por los dos puntos
   const colonIndex = decoded.indexOf(':');
   if (colonIndex === -1) {
     res.setHeader('WWW-Authenticate', `Basic realm="${realm}", charset="UTF-8"`);
     res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end('<h1>401 Credenciales Inválidas</h1>');
+    res.end('<h1>401 Credenciales Invalidas</h1>');
     return false;
   }
 
   const reqUser = decoded.slice(0, colonIndex);
   const reqPass = decoded.slice(colonIndex + 1);
 
+  // Si coinciden dejamos pasar
   if (reqUser === user && reqPass === pass) {
     return true;
   }
 
-  // Credenciales provistas pero incorrectas
+  // Si puso mal el usuario o la clave
   res.setHeader('WWW-Authenticate', `Basic realm="${realm}", charset="UTF-8"`);
   res.writeHead(401, { 'Content-Type': 'text/html; charset=utf-8' });
   res.end(`<!DOCTYPE html>
@@ -82,7 +77,7 @@ function basicAuth(req, res, user, pass, realm = 'Zona Protegida UTN FRM') {
 <body>
   <div class="card">
     <h1>401 Credenciales Incorrectas</h1>
-    <p>El usuario o la contraseña suministrados no son válidos para este recurso protegido.</p>
+    <p>El usuario o la contraseña no son correctos.</p>
     <a href="/" class="btn">Volver al Inicio</a>
   </div>
 </body>

@@ -6,7 +6,7 @@ const { sanitizePath } = require('./security');
 const { basicAuth } = require('./auth');
 const { logAccess, getRecentLogs, clearLogs } = require('./logger');
 
-// Ruta y carga inicial de la configuración
+// Leemos la configuracion inicial
 const configPath = path.join(__dirname, 'config.json');
 
 function loadConfig() {
@@ -14,7 +14,7 @@ function loadConfig() {
     const raw = fs.readFileSync(configPath, 'utf8');
     return JSON.parse(raw);
   } catch (err) {
-    console.error('[CONFIG ERROR] No se pudo leer config.json, usando valores por defecto:', err.message);
+    console.error('Error al leer config.json, usando valores por defecto:', err.message);
     return {
       port: 8080,
       documentRoot: './public',
@@ -27,7 +27,7 @@ function loadConfig() {
 
 let config = loadConfig();
 
-// Tabla de tipos MIME soportados
+// Tipos de archivos que soportamos
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
   '.htm': 'text/html; charset=utf-8',
@@ -46,9 +46,7 @@ const MIME_TYPES = {
   '.txt': 'text/plain; charset=utf-8'
 };
 
-/**
- * Plantilla genérica para páginas de error con estilo moderno
- */
+// Pagina basica para mostrar errores
 function renderErrorPage(code, title, message) {
   return `<!DOCTYPE html>
 <html lang="es">
@@ -76,14 +74,12 @@ function renderErrorPage(code, title, message) {
 </html>`;
 }
 
-/**
- * Servidor HTTP principal
- */
+// Servidor HTTP principal
 const server = http.createServer((req, res) => {
   const method = req.method ? req.method.toUpperCase() : 'GET';
   const urlPath = req.url.split('?')[0];
 
-  // Métodos soportados: GET, POST, HEAD
+  // Si mandan un metodo que no sea GET, POST o HEAD devolvemos 405
   if (!['GET', 'POST', 'HEAD'].includes(method)) {
     logAccess(req, 405, 0);
     res.setHeader('Allow', 'GET, POST, HEAD');
@@ -91,11 +87,8 @@ const server = http.createServer((req, res) => {
     return res.end(renderErrorPage(405, 'Método No Permitido', `El método HTTP ${method} no está soportado por este servidor.`));
   }
 
-  // ==========================================
-  // 1. ENDPOINTS DE LA API DE ADMINISTRACIÓN
-  // ==========================================
+  // 1. API para ver y modificar la configuracion desde el admin
   if (urlPath === '/api/config') {
-    // Proteger API de configuración con Basic Auth
     if (!basicAuth(req, res, config.authUser, config.authPass, 'Panel de Administración')) {
       logAccess(req, 401, 0);
       return;
@@ -112,7 +105,7 @@ const server = http.createServer((req, res) => {
       let body = '';
       req.on('data', chunk => {
         body += chunk;
-        if (body.length > 1e6) { // Protección contra DoS
+        if (body.length > 1e6) { // Limite de 1MB por seguridad
           req.socket.destroy();
         }
       });
@@ -121,7 +114,7 @@ const server = http.createServer((req, res) => {
         try {
           const newSettings = JSON.parse(body);
 
-          // Validación básica
+          // Actualizamos los parametros
           if (newSettings.documentRoot) config.documentRoot = String(newSettings.documentRoot).trim();
           if (newSettings.protectedPath) config.protectedPath = String(newSettings.protectedPath).trim();
           if (newSettings.authUser) config.authUser = String(newSettings.authUser).trim();
@@ -133,7 +126,7 @@ const server = http.createServer((req, res) => {
             portWarning = `El puerto se actualizará a ${config.port} en el próximo reinicio del servidor.`;
           }
 
-          // Guardar en config.json
+          // Guardamos los cambios en config.json
           fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
 
           const responseData = JSON.stringify({
@@ -156,8 +149,8 @@ const server = http.createServer((req, res) => {
     }
   }
 
+  // 2. API para ver y limpiar los logs
   if (urlPath === '/api/logs') {
-    // Proteger API de logs con Basic Auth
     if (!basicAuth(req, res, config.authUser, config.authPass, 'Panel de Administración')) {
       logAccess(req, 401, 0);
       return;
@@ -179,9 +172,7 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // ==========================================
-  // 2. SEGURIDAD: PREVENCIÓN DE DIRECTORY TRAVERSAL
-  // ==========================================
+  // 3. Verificamos que no intenten escapar de public (Directory Traversal)
   const { isSafe, path: filePath } = sanitizePath(config.documentRoot, req.url);
 
   if (!isSafe) {
@@ -196,26 +187,21 @@ const server = http.createServer((req, res) => {
     return res.end(errorHtml);
   }
 
-  // ==========================================
-  // 3. AUTENTICACIÓN BÁSICA HTTP
-  // ==========================================
-  // Proteger rutas dentro de config.protectedPath o el panel /admin
+  // 4. Si es una ruta protegida pedimos usuario y clave
   const isProtectedResource = (config.protectedPath && urlPath.startsWith(config.protectedPath)) ||
                               urlPath.startsWith('/admin');
 
   if (isProtectedResource) {
     if (!basicAuth(req, res, config.authUser, config.authPass, 'Área Restringida UTN FRM')) {
       logAccess(req, 401, 0);
-      return; // basicAuth ya envió los headers 401 y WWW-Authenticate
+      return;
     }
   }
 
-  // ==========================================
-  // 4. RESOLUCIÓN Y SERVICIO DE ARCHIVOS ESTÁTICOS
-  // ==========================================
+  // 5. Servir los archivos estaticos
   let targetFile = filePath;
 
-  // Si es un directorio, buscar index.html por defecto
+  // Si piden una carpeta, buscamos el index.html adentro
   try {
     if (fs.existsSync(targetFile)) {
       const stat = fs.statSync(targetFile);
@@ -231,7 +217,7 @@ const server = http.createServer((req, res) => {
     return res.end(errorHtml);
   }
 
-  // Verificar si el archivo final existe
+  // Si el archivo no existe devolvemos 404
   if (!fs.existsSync(targetFile)) {
     const notFoundHtml = renderErrorPage(
       404,
@@ -244,7 +230,7 @@ const server = http.createServer((req, res) => {
     return res.end(notFoundHtml);
   }
 
-  // Obtener tamaño y extensión para Content-Type y Content-Length
+  // Obtenemos tamano y tipo MIME
   try {
     const stat = fs.statSync(targetFile);
     if (!stat.isFile()) {
@@ -258,7 +244,7 @@ const server = http.createServer((req, res) => {
     const ext = path.extname(targetFile).toLowerCase();
     const contentType = MIME_TYPES[ext] || 'application/octet-stream';
 
-    // Manejo de petición HEAD: cabeceras completas sin cuerpo
+    // Para peticiones HEAD devolvemos las mismas cabeceras pero sin el contenido
     if (method === 'HEAD') {
       logAccess(req, 200, 0);
       res.writeHead(200, {
@@ -270,7 +256,7 @@ const server = http.createServer((req, res) => {
       return res.end();
     }
 
-    // Manejo de petición GET
+    // Para peticiones GET leemos y mandamos el archivo
     fs.readFile(targetFile, (readErr, data) => {
       if (readErr) {
         const errorHtml = renderErrorPage(500, '500 Error Interno', 'No se pudo leer el archivo solicitado.');
@@ -311,7 +297,7 @@ server.listen(config.port, () => {
   console.log(`======================================================\n`);
 });
 
-// Manejo de cierre seguro
+// Cierre limpio con Ctrl+C
 process.on('SIGINT', () => {
   console.log('\nCerrando servidor HTTP...');
   server.close(() => {
