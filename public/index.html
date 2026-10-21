@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Servidor Web HTTP | UTN FRM</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #141c2e;
+      --card-border: #23314a;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(circle at top, #182642 0%, var(--bg) 60%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 2.5rem 1.5rem 1.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #60a5fa;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #ffffff, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 2.5rem auto;
+      padding: 0 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #3b82f6;
+      box-shadow: 0 15px 25px -5px rgba(59, 130, 246, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .card-icon {
+      font-size: 1.75rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.5rem;
+      border-radius: 10px;
+    }
+    .card h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+    .btn-warning {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+    }
+    .btn-warning:hover {
+      background: rgba(245, 158, 11, 0.25);
+    }
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #f87171;
+    }
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.25);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .status-panel {
+      grid-column: 1 / -1;
+      background: rgba(16, 185, 129, 0.08);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      border-radius: 12px;
+      padding: 1.25rem 1.75rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.15); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      border-top: 1px solid var(--card-border);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">Redes de Información • UTN FRM</div>
+    <h1>Servidor Web HTTP Modular</h1>
+    <p class="subtitle">Implementación de referencia con DocumentRoot Sandbox, HTTP Basic Auth, Logging y Panel Web.</p>
+  </header>
+
+  <main>
+    <div class="status-panel">
+      <div class="status-left">
+        <div class="status-dot"></div>
+        <div>
+          <strong>Servidor HTTP Activo (200 OK)</strong>
+          <div style="font-size: 0.85rem; color: #94a3b8;">Atendiendo en Node.js nativo (sin frameworks externos)</div>
+        </div>
+      </div>
+      <div>
+        <span style="font-family: monospace; font-size: 0.9rem; background: rgba(0,0,0,0.3); padding: 0.4rem 0.8rem; border-radius: 6px;">GET • POST • HEAD</span>
+      </div>
+    </div>
+
+    <!-- Card 1: Zona Protegida -->
+    <div class="card">
+      <div>
+        <div class="card-header">
+          <div class="card-icon">🔒</div>
+          <h2>Autenticación Básica</h2>
+        </div>
+        <p>Prueba el middleware <code>auth.js</code>. Si no estás autenticado, el servidor responderá con <strong>HTTP 401 Unauthorized</strong> solicitando usuario y clave.</p>
+      </div>
+      <a href="/protected" class="btn btn-warning">Probar /protected (401)</a>
+    </div>
+
+    <!-- Card 2: Panel de Administración -->
+    <div class="card">
+      <div>
+        <div class="card-header">
+          <div class="card-icon">⚙️</div>
+          <h2>Panel de Configuración</h2>
+        </div>
+        <p>Interfaz administrativa para modificar parámetros en caliente (DocumentRoot, credenciales, puerto) y ver <code>access.log</code> en vivo.</p>
+      </div>
+      <a href="/admin" class="btn btn-primary">Abrir Panel /admin</a>
+    </div>
+
+    <!-- Card 3: Directory Traversal Test -->
+    <div class="card">
+      <div>
+        <div class="card-header">
+          <div class="card-icon">🛡️</div>
+          <h2>Seguridad DocumentRoot</h2>
+        </div>
+        <p>Prueba un intento de Directory Traversal solicitando <code>/../../config.json</code>. El módulo <code>security.js</code> responderá con <strong>HTTP 403 Forbidden</strong>.</p>
+      </div>
+      <a href="/..%2f..%2fconfig.json" class="btn btn-danger">Simular Ataque Traversal (403)</a>
+    </div>
+
+    <!-- Card 4: 404 Not Found -->
+    <div class="card">
+      <div>
+        <div class="card-header">
+          <div class="card-icon">🔍</div>
+          <h2>Recurso Inexistente</h2>
+        </div>
+        <p>Prueba la solicitud a un archivo no existente dentro del servidor para verificar la emisión del código de estado <strong>HTTP 404 Not Found</strong>.</p>
+      </div>
+      <a href="/archivo-inexistente.html" class="btn btn-secondary">Probar Recurso 404</a>
+    </div>
+  </main>
+
+  <footer>
+    <p>Trabajo Práctico N° 7 - Servidor Web HTTP • Cátedra Redes de Información • UTN FRM</p>
+  </footer>
+
+</body>
+</html>

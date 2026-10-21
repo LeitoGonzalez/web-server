@@ -1,0 +1,20 @@
+{
+  "name": "web-server-utn",
+  "version": "1.0.0",
+  "description": "Servidor Web HTTP con Logging, DocumentRoot Sandbox, HTTP Basic Auth y Panel Web - UTN FRM",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "http",
+    "web-server",
+    "basic-auth",
+    "directory-traversal",
+    "utn",
+    "redes"
+  ],
+  "author": "UTN FRM - Redes de Información",
+  "license": "ISC"
+}

@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control del Servidor | /admin</title>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: #141c2e;
+            --card-border: #23314a;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --terminal-bg: #030712;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: radial-gradient(circle at top right, #1d2b45 0%, var(--bg) 60%);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(20, 28, 46, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--card-border);
+            padding: 1.25rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .brand h1 {
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+
+        .brand-badge {
+            background: rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            color: #93c5fd;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 1.25rem auto;
+            padding: 0 1.5rem 1.5rem;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                height: auto;
+                overflow: auto;
+            }
+            main {
+                grid-template-columns: 1fr;
+                overflow: visible;
+            }
+            .terminal-container {
+                height: 480px;
+            }
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 1.75rem;
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-desc {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Formulario */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            margin-bottom: 0.4rem;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="password"] {
+            width: 100%;
+            background: #0b0f19;
+            border: 1px solid #334155;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            color: white;
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .form-hint {
+            font-size: 0.78rem;
+            color: #64748b;
+            margin-top: 0.35rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-secondary {
+            background: #1e293b;
+            color: #cbd5e1;
+            border: 1px solid #334155;
+        }
+
+        .btn-secondary:hover {
+            background: #334155;
+        }
+
+        /* Visor de Logs */
+        .terminal-container {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            background: var(--terminal-bg);
+            border: 1px solid #1f293d;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .terminal-toolbar {
+            background: #0f172a;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #1e293b;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .terminal-content {
+            flex: 1;
+            min-height: 0;
+            padding: 1rem;
+            font-family: "Cascadia Code", "Fira Code", Menlo, Monaco, Consolas, monospace;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: #a5f3fc;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .alert-box {
+            padding: 0.85rem 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            font-size: 0.88rem;
+            display: none;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #34d399;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+
+        .switch-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="brand">
+            <h1>⚙️ Servidor Web HTTP</h1>
+            <span class="brand-badge">Admin Suite</span>
+        </div>
+        <div class="nav-links">
+            <a href="/" target="_blank">Portal Público ↗</a>
+            <a href="/protected" target="_blank">Zona Protegida ↗</a>
+        </div>
+    </header>
+
+    <main>
+        <!-- Columna 1: Formulario de Parámetros -->
+        <div class="card">
+            <div class="card-title">⚙️ Parámetros del Servidor</div>
+            <div class="card-desc">Modifica los parámetros en caliente. Los cambios se guardan de forma persistente en
+                <code>config.json</code>.</div>
+
+            <div id="alertBox" class="alert-box"></div>
+
+            <form id="configForm">
+                <div class="form-group">
+                    <label for="documentRoot">Ruta de DocumentRoot:</label>
+                    <input type="text" id="documentRoot" name="documentRoot" required>
+                    <div class="form-hint">Carpeta pública raíz donde se resuelven los archivos estáticos (ej:
+                        <code>./public</code>).</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="protectedPath">Ruta Protegida (Basic Auth):</label>
+                    <input type="text" id="protectedPath" name="protectedPath" required>
+                    <div class="form-hint">Prefijo de URL que solicitará usuario y contraseña (ej:
+                        <code>/protected</code>).</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="authUser">Usuario Administrador:</label>
+                        <input type="text" id="authUser" name="authUser" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="authPass">Contraseña:</label>
+                        <input type="text" id="authPass" name="authPass" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="port">Puerto de escucha:</label>
+                    <input type="number" id="port" name="port" min="1024" max="65535" required>
+                    <div class="form-hint">Nota: Si cambias el puerto, surtirá efecto al reiniciar el proceso Node.
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    💾 Guardar Parámetros en Caliente
+                </button>
+            </form>
+        </div>
+
+        <!-- Columna 2: Visor de Logs en Vivo -->
+        <div class="card">
+            <div class="card-title">📜 Registro de Accesos (access.log)</div>
+            <div class="card-desc">Monitoreo en tiempo real de peticiones HTTP, direcciones IP, métodos, códigos de
+                estado y User-Agent.</div>
+
+            <div class="terminal-container">
+                <div class="terminal-toolbar">
+                    <label class="switch-label">
+                        <input type="checkbox" id="autoRefresh" checked> Auto-refresco (3s)
+                    </label>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;"
+                            onclick="fetchLogs()">🔄 Refrescar</button>
+                        <button class="btn btn-danger" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;"
+                            onclick="clearLogs()">🗑️ Limpiar</button>
+                    </div>
+                </div>
+                <div id="terminalContent" class="terminal-content">Cargando registros del servidor...</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const alertBox = document.getElementById('alertBox');
+        const form = document.getElementById('configForm');
+        const terminal = document.getElementById('terminalContent');
+        const autoRefresh = document.getElementById('autoRefresh');
+
+        function showAlert(msg, isError = false) {
+            alertBox.textContent = msg;
+            alertBox.className = 'alert-box ' + (isError ? 'alert-error' : 'alert-success');
+            alertBox.style.display = 'block';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 4500);
+        }
+
+        // Cargar configuración actual
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                if (!res.ok) throw new Error('No autorizado o error de servidor');
+                const data = await res.json();
+                document.getElementById('documentRoot').value = data.documentRoot;
+                document.getElementById('protectedPath').value = data.protectedPath;
+                document.getElementById('authUser').value = data.authUser;
+                document.getElementById('authPass').value = data.authPass;
+                document.getElementById('port').value = data.port;
+            } catch (err) {
+                showAlert('Error al cargar configuración: ' + err.message, true);
+            }
+        }
+
+        // Enviar nueva configuración
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                documentRoot: document.getElementById('documentRoot').value,
+                protectedPath: document.getElementById('protectedPath').value,
+                authUser: document.getElementById('authUser').value,
+                authPass: document.getElementById('authPass').value,
+                port: parseInt(document.getElementById('port').value, 10)
+            };
+
+            try {
+                const res = await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    let msg = result.message;
+                    if (result.portWarning) msg += ' (' + result.portWarning + ')';
+                    showAlert(msg, false);
+                    fetchLogs();
+                } else {
+                    showAlert('Error: ' + result.error, true);
+                }
+            } catch (err) {
+                showAlert('Error al guardar: ' + err.message, true);
+            }
+        });
+
+        // Consultar logs
+        async function fetchLogs() {
+            try {
+                const res = await fetch('/api/logs');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const text = await res.text();
+                terminal.textContent = text || 'Sin peticiones registradas aún.';
+                terminal.scrollTop = terminal.scrollHeight;
+            } catch (err) {
+                terminal.textContent = 'Error al obtener access.log: ' + err.message;
+            }
+        }
+
+        // Limpiar logs
+        async function clearLogs() {
+            if (!confirm('¿Deseas vaciar el archivo access.log?')) return;
+            try {
+                const res = await fetch('/api/logs', { method: 'POST' });
+                const result = await res.json();
+                if (result.success) {
+                    showAlert('Logs limpiados con éxito.');
+                    fetchLogs();
+                }
+            } catch (err) {
+                showAlert('Error al limpiar logs: ' + err.message, true);
+            }
+        }
+
+        // Intervalo de auto-refresco
+        setInterval(() => {
+            if (autoRefresh.checked) {
+                fetchLogs();
+            }
+        }, 3000);
+
+        // Inicio
+        loadConfig();
+        fetchLogs();
+    </script>
+</body>
+
+</html>
