@@ -1,0 +1,7 @@
+{
+    "port": 8080,
+    "documentRoot": "./public",
+    "protectedPath": "/protected",
+    "authUser": "admin",
+    "authPass": "utn2026"
+}
