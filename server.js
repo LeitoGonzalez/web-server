@@ -301,21 +301,21 @@ const server = http.createServer((req, res) => {
 server.listen(config.port, () => {
   const absRoot = path.resolve(config.documentRoot);
   console.log(`\n======================================================`);
-  console.log(`🚀 SERVIDOR WEB HTTP (UTN FRM - Redes de Información)`);
+  console.log(`SERVIDOR WEB HTTP (UTN FRM - Redes de Información)`);
   console.log(`======================================================`);
-  console.log(`🌐 Escuchando en:      http://localhost:${config.port}`);
-  console.log(`📂 DocumentRoot:       ${absRoot}`);
-  console.log(`🔒 Directorio Seguro:  http://localhost:${config.port}${config.protectedPath}`);
-  console.log(`⚙️  Panel de Control:   http://localhost:${config.port}/admin`);
-  console.log(`🔑 Credenciales:       ${config.authUser} / ${config.authPass}`);
+  console.log(`Escuchando en:      http://localhost:${config.port}`);
+  console.log(`DocumentRoot:       ${absRoot}`);
+  console.log(`Directorio Seguro:  http://localhost:${config.port}${config.protectedPath}`);
+  console.log(`Panel de Control:   http://localhost:${config.port}/admin`);
+  console.log(`Credenciales:       ${config.authUser} / ${config.authPass}`);
   console.log(`======================================================\n`);
 });
 
 // Manejo de cierre seguro
 process.on('SIGINT', () => {
-  console.log('\n🛑 Cerrando servidor HTTP...');
+  console.log('\nCerrando servidor HTTP...');
   server.close(() => {
-    console.log('✅ Servidor detenido correctamente.');
+    console.log('Servidor detenido correctamente.');
     process.exit(0);
   });
 });

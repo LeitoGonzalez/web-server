@@ -5,7 +5,7 @@
 
 ---
 
-## 📌 Descripción General
+## Descripción General
 
 Este proyecto implementa un servidor web HTTP completo, modular y de alto rendimiento utilizando **Node.js nativo** (módulos `http`, `fs`, `path`), **sin frameworks externos ni dependencias de terceros**.
 
@@ -18,7 +18,7 @@ Incluye:
 
 ---
 
-## 🚀 Inicio Rápido
+## Inicio Rápido
 
 ### Requisitos Previos
 - **Node.js 18+** instalado (probado y verificado en Node.js 22 LTS).
@@ -41,19 +41,19 @@ npm run dev
 Una vez iniciado, la consola mostrará:
 ```text
 ======================================================
-🚀 SERVIDOR WEB HTTP (UTN FRM - Redes de Información)
+SERVIDOR WEB HTTP (UTN FRM - Redes de Información)
 ======================================================
-🌐 Escuchando en:      http://localhost:8080
-📂 DocumentRoot:       ./public
-🔒 Directorio Seguro:  http://localhost:8080/protected
-⚙️  Panel de Control:   http://localhost:8080/admin
-🔑 Credenciales:       admin / utn2026
+Escuchando en:      http://localhost:8080
+DocumentRoot:       ./public
+Directorio Seguro:  http://localhost:8080/protected
+Panel de Control:   http://localhost:8080/admin
+Credenciales:       admin / utn2026
 ======================================================
 ```
 
 ---
 
-## 🌐 Endpoints y Rutas del Servidor
+## Endpoints y Rutas del Servidor
 
 | Ruta | Método(s) | Descripción | Estado HTTP Esperado |
 | :--- | :--- | :--- | :--- |
@@ -69,7 +69,7 @@ Una vez iniciado, la consola mostrará:
 
 ---
 
-## 🔑 Credenciales por Defecto
+## Credenciales por Defecto
 
 * **Usuario:** `admin`
 * **Contraseña:** `utn2026`
@@ -78,7 +78,7 @@ Una vez iniciado, la consola mostrará:
 
 ---
 
-## 🧪 Pruebas Rápidas con `curl`
+## Pruebas Rápidas con `curl`
 
 ### 1. Petición GET normal
 ```bash
@@ -107,7 +107,7 @@ curl -i "http://localhost:8080/..%2f..%2fconfig.json"
 
 ---
 
-## 📂 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```text
 web-server/
